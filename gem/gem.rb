@@ -3,7 +3,6 @@ require 'rake'
 require 'yaml'
 
 class New::Task::Gem < New::Task
-  include New::Interpolate
   include New::Version
 
   GLOB_ATTRIBUTES = [:files, :test_files, :extra_rdoc_files]
@@ -135,7 +134,7 @@ private
     New.say 'Updating `.gemspec` file...', type: :success
 
     # process gemspec
-    interpolate File.join(File.dirname(__FILE__), '.gemspec.erb'), project_options
+    # interpolate File.join(File.dirname(__FILE__), '.gemspec.erb'), project_options
 
     # copy it to the project
     FileUtils.cp File.join(@dest_path, '.gemspec'), Dir.pwd
