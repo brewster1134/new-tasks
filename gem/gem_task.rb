@@ -1,63 +1,38 @@
-require 'bundler'
-require 'rake'
-require 'yaml'
+# require 'bundler'
+# require 'rake'
+# require 'yaml'
 
-class New::Task::Gem < New::Task
-  include New::Version
-
+# http://guides.rubygems.org/specification-reference
+class New::GemTask < New::Task
+  GEMFILE = File.join(Dir.pwd, 'Gemfile')
   GLOB_ATTRIBUTES = [:files, :test_files, :extra_rdoc_files]
-  GEMFILE = File.expand_path(File.join(Dir.pwd, 'Gemfile'))
-  OPTIONS = {
+  DEFAULT_OPTIONS = {
     gemspec: {
       summary: "A short summary of this gem's description. Displayed in `gem list -d`",
       files: ['**/*','**/.*']
     }
   }
 
-  def run
-    @gemspec = options[:gemspec]
+  def initialize options
+    @gemspec = {}
+    @options = options
 
-    set_version
-    validate_files
-    render_gemspec_options
-    write_gemspec
-    write_config
-    deploy
+    build_glob_attributes
+    # render_gemspec_options
+    # write_gemspec
+    # write_config
+    # deploy
 
-    New.say "Version #{project_options[:version].green} of the #{project_options[:project][:name].green} gem successfully published."
+    # New.say "Version #{project_options[:version].green} of the #{project_options[:project][:name].green} gem successfully published."
   end
 
 private
 
-  def set_version
-    # bump version
-    bump_version project_options[:version]
-
-    # set new version to config
-    project_options[:version] = version.to_s
-  end
-
-  # Check that any glob pattern attributes match existing files
+  # Build glob-based attributes to gemspec object
   #
-  def validate_files
-    GLOB_ATTRIBUTES.each do |file_attr|
-      next if @gemspec[file_attr].nil?
-
-      files = []
-      @gemspec[file_attr].each do |glob|
-        matching_files = FileList.new(glob).select{ |f| File.file? f }
-        matching_files.delete '.gemspec'
-
-        if matching_files.empty?
-          New.say "The pattern `#{glob}` in `tasks.gem.gemspec.#{file_attr}` did not match any files."
-          New.say 'Please check your configuration file.'
-          exit
-        else
-          files << matching_files
-        end
-      end
-
-      @gemspec[file_attr] = files.flatten
+  def build_glob_attributes
+    (GLOB_ATTRIBUTES & @options.keys).each do |glob_option|
+      @gemspec[glob_option] = Dir[@options[glob_option]]
     end
   end
 
