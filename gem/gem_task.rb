@@ -4,7 +4,6 @@
 
 # http://guides.rubygems.org/specification-reference
 class New::GemTask < New::Task
-  GEMFILE = File.join(Dir.pwd, 'Gemfile')
   GLOB_ATTRIBUTES = [:files, :test_files, :extra_rdoc_files]
   DEFAULT_OPTIONS = {
     gemspec: {
@@ -14,131 +13,126 @@ class New::GemTask < New::Task
   }
 
   def initialize options
-    @gemspec = {}
+    @gemspec_string = ''
+    @gemspec = options.delete(:gemspec)
     @options = options
+    @dependencies = {
+      :runtime => {},
+      :development => {}
+    }
 
+    build_attributes
     build_glob_attributes
-    # render_gemspec_options
-    # write_gemspec
-    # write_config
-    # deploy
+    build_dependency_attributes
 
-    # New.say "Version #{project_options[:version].green} of the #{project_options[:project][:name].green} gem successfully published."
+    validate_gemspec
+
+    build_gemspec_string
+    write_gemspec
+    push_gem
+    cleanup
   end
 
 private
 
-  # Build glob-based attributes to gemspec object
-  #
-  def build_glob_attributes
-    (GLOB_ATTRIBUTES & @options.keys).each do |glob_option|
-      @gemspec[glob_option] = Dir[@options[glob_option]]
-    end
+  def build_attributes
+    @gemspec[:name] = @options[:name]
+    @gemspec[:version] = @options[:version]
+    @gemspec[:date] = Date.today.to_s
   end
 
-  def render_gemspec_options
-    array = []
-
-    # set defaults
-    @gemspec[:date]    = Date.today.to_s
-    @gemspec[:name]    = project_options[:project][:name]
-    @gemspec[:version] = project_options[:version]
-    @gemspec[:author]  ||= project_options[:developer][:name]
-    @gemspec[:email]   ||= project_options[:developer][:email]
-    @gemspec[:license] ||= project_options[:license]
-
-    # remove singular attributes if plural attribute is specified
-    if @gemspec[:authors]
-      @gemspec.delete(:author)
-      @gemspec[:authors] = @gemspec[:authors]
-    end
-    if @gemspec[:licenses]
-      @gemspec.delete(:license)
-      @gemspec[:licenses] = @gemspec[:licenses]
-    end
-
-    @gemspec.sort.each do |k,v|
-      val = case v
-      when String then "'#{v}'"
-      else v
+  # Build glob-based attributes into file lists
+  #
+  def build_glob_attributes
+    (GLOB_ATTRIBUTES & @gemspec.keys).each do |glob_option|
+      glob_array = []
+      @gemspec[glob_option].each do |glob|
+        glob_array += Dir[glob]
       end
 
-      array << "  s.#{k} = #{val}"
+      @gemspec[glob_option] = glob_array.select{ |f| File.file?(f) }
     end
-
-    array += extract_gem_dependencies
-
-    project_options[:gemspec_string] = array.join("\n")
   end
 
   # Extract dependencies based on the Gemfile to be used in the gemspec
   #
-  def extract_gem_dependencies
-    b = Bundler::Dsl.new
-    b.eval_gemfile(GEMFILE)
+  def build_dependency_attributes
+    gemfile = File.join(Dir.pwd, 'Gemfile')
+    return unless File.file? gemfile
 
-    array = []
-    runtime = []
-    development = []
+    bundler = Bundler::Dsl.new
+    bundler.eval_gemfile gemfile
 
     # loop through the required gems and find default and development gems
-    b.dependencies.each do |g|
-      requirements = g.requirements_list.map{ |r| "'#{r}'" }.join(',')
-      data = {
-        name: g.name,
-        requirements: requirements
-      }
-
-      groups = g.groups
-      runtime <<  data if groups.include? :default
-      development <<  data if groups.include? :development
+    bundler.dependencies.each do |gem|
+      if gem.groups.include? :default
+        @dependencies[:runtime][gem.name] = gem.requirements_list.first
+      else
+        @dependencies[:development][gem.name] = gem.requirements_list.first
+      end
     end
-
-    # create .gemspec friendly string of requirements
-    runtime.each do |r|
-      array << "  s.add_runtime_dependency '#{r[:name]}', #{r[:requirements]}"
-    end
-    development.each do |r|
-      array << "  s.add_development_dependency '#{r[:name]}', #{r[:requirements]}"
-    end
-
-    return array
   end
 
+  def build_gemspec_string
+    @gemspec.each do |key, val|
+      val = "'#{val}'" if val.is_a? String
+      @gemspec_string << "  s.#{key} = #{val}\n"
+    end
+
+    @dependencies[:runtime].each do |key, val|
+      @gemspec_string << "  s.add_runtime_dependency '#{key}', '#{val}'\n"
+    end
+
+    @dependencies[:development].each do |key, val|
+      @gemspec_string << "  s.add_development_dependency '#{key}', '#{val}'\n"
+    end
+  end
+
+  # validate required attributes to build a gem are set
+  #
+  def validate_gemspec
+    unless @gemspec[:name]
+      S.ay 'Value for `name` is missing. Make sure to set `name` in your project\'s Newfile', :error
+      exit
+    end
+
+    unless @gemspec[:version]
+      S.ay 'Value for `version` is missing. This should be automatically set. Please report this issue to Github issues: https://github.com/brewster1134/new/issues', :error
+      exit
+    end
+
+    unless @gemspec[:summary]
+      S.ay 'Value for `summary` is missing. Make sure to set `tasks > gem > gemspec > summary` in your project\'s Newfile', :error
+      exit
+    end
+
+    unless @gemspec[:author] || @gemspec[:authors]
+      S.ay 'Value for `author`/`authors` is missing. Make sure to set `tasks > gem > gemspec > author/authors` in your project\'s Newfile', :error
+      exit
+    end
+  end
+
+  # create a .gemspec file and save it to the project root
+  #
   def write_gemspec
-    New.say 'Updating `.gemspec` file...', type: :success
+    gemspec = File.join(Dir.pwd, '.gemspec')
 
-    # process gemspec
-    # interpolate File.join(File.dirname(__FILE__), '.gemspec.erb'), project_options
-
-    # copy it to the project
-    FileUtils.cp File.join(@dest_path, '.gemspec'), Dir.pwd
-
-    # cleanup the tmp
-    FileUtils.rm_rf @dest_path
-  end
-
-  def write_config
-    New.say 'Updating `.new` file...', type: :success
-
-    writeable_options = project_options.dup
-    writeable_options.delete(:gemspec_string)
-    GLOB_ATTRIBUTES.each{ |a| writeable_options.delete(a) }
-
-    File.open(New::CONFIG_FILE, 'w+') do |f|
-      f.write writeable_options.deep_stringify_keys.to_yaml
+    File.open gemspec, 'w+' do |f|
+      f.write "# coding: utf-8\n"
+      f.write "Gem::Specification.new do |s|\n"
+      f.write @gemspec_string
+      f.write "end\n"
     end
   end
 
-  def deploy
-    New.say 'Pushing new gem version to rubygems...', type: :success
-    New.say '                ...This may take a bit', type: :warn
-
-    `gem update --system`
+  # push gem to rubygems
+  #
+  def push_gem
     `gem build .gemspec`
     `gem push #{@gemspec[:name]}-#{@gemspec[:version]}.gem`
-    FileUtils.rm_rf "#{@gemspec[:name]}-#{@gemspec[:version]}.gem"
+  end
 
-    New.say "#{@gemspec[:name]}-#{@gemspec[:version]} released".green
+  def cleanup
+    FileUtils.rm "#{@gemspec[:name]}-#{@gemspec[:version]}.gem"
   end
 end

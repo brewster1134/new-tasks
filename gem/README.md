@@ -7,27 +7,27 @@ You can add any of the supported gemspec attributes to your project's `.new` con
 ```yaml
 tasks:
   gem:
+    author: Brewster
     summary: My gem summary
-    test_files: <%= Dir.glob('spec/*.rb') %> # use erb rules for inline ruby
+    files:
+      - 'lib/**/*.rb'
+    test_files:
+      - 'spec/**/*.rb'
 ```
 
 A full list can be found here http://guides.rubygems.org/specification-reference
+
+The following attributes are required
+
+* author
+* summary
+* files
 
 The following attributes expect arrays of unix glob patterns
 
 * files
 * test_files
 * extra_rdoc_files
-
-```yaml
-tasks:
-  gem:
-    gemspec:
-      files:
-      - 'lib/**/*.rb'
-      test_files:
-      - 'spec/**/*.rb'
-```
 
 The following attributes are automatically set.
 
