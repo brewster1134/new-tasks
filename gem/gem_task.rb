@@ -1,8 +1,3 @@
-# require 'bundler'
-# require 'rake'
-# require 'yaml'
-
-# http://guides.rubygems.org/specification-reference
 class New::GemTask < New::Task
   GLOB_ATTRIBUTES = [:files, :test_files, :extra_rdoc_files]
   DEFAULT_OPTIONS = {
