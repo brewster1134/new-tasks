@@ -1,9 +1,17 @@
 class New::GemTask < New::Task
-  GLOB_ATTRIBUTES = [:files, :test_files, :extra_rdoc_files]
-  DEFAULT_OPTIONS = {
-    gemspec: {
-      summary: "A short summary of this gem's description. Displayed in `gem list -d`",
-      files: ['**/*','**/.*']
+  DESCRIPTION = 'Push a new gem version to rubygems'
+  OPTIONS = {
+    :gemspec => {
+      :required => true,
+      :type => Hash,
+      :validation => {
+        :summary => String,
+        :files => Array
+      },
+      :default => {
+        :summary => "A short summary of this gem's description. Displayed in `gem list -d`",
+        :files => ['**/*','**/.*']
+      }
     }
   }
 
@@ -39,12 +47,17 @@ private
   # Build glob-based attributes into file lists
   #
   def build_glob_attributes
-    (GLOB_ATTRIBUTES & @gemspec.keys).each do |glob_option|
+    # set array of gemspec attributes that expect glob patterns
+    glob_attributes = [:files, :test_files, :extra_rdoc_files]
+
+    # if any glob attributes are defined, convert the globs to a file list
+    (glob_attributes & @gemspec.keys).each do |glob_option|
       glob_array = []
       @gemspec[glob_option].each do |glob|
         glob_array += Dir[glob]
       end
 
+      # only include files
       @gemspec[glob_option] = glob_array.select{ |f| File.file?(f) }
     end
   end
