@@ -9,7 +9,17 @@ describe New::GemTask do
     @pwd = FileUtils.pwd
     FileUtils.chdir root('tmp')
 
-    @gem = New::GemTask.new({:name => 'Name', :version => '1.2.3', :gemspec => { :files => ['*'], :summary => 'Summary', :author => 'Author' }})
+    @gem = New::GemTask.new('gem', @pwd)
+    @gem.run({
+      :name => 'Name',
+      :version => '1.2.3',
+      :task_options => {
+        :summary => 'Summary',
+        :files => ['*'],
+        :authors => ['Author'],
+        :gemspec => {}
+      }
+    })
   end
 
   after do

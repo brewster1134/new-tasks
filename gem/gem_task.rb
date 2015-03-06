@@ -1,23 +1,34 @@
+require 'bundler'
+
 class New::GemTask < New::Task
-  DESCRIPTION = 'Push a new gem version to rubygems'
-  OPTIONS = {
+  @@description = 'Publish gem to rubygems'
+  @@options = {
+    :name => {
+      :description => 'The gem name'
+    },
+    :summary => {
+      :description => "A short summary of this gem's description",
+      :required => true
+    },
+    :files => {
+      :description => 'Files included in this gem',
+      :type => Array,
+      :default => ['**/*','**/.*']
+    },
+    :authors => {
+      :description => 'List of authors',
+      :type => Array,
+      :required => true
+    },
     :gemspec => {
-      :required => true,
+      :description => 'An object with any additional supported gemspec attributes',
       :type => Hash,
-      :validation => {
-        :summary => String,
-        :files => Array
-      },
-      :default => {
-        :summary => "A short summary of this gem's description. Displayed in `gem list -d`",
-        :files => ['**/*','**/.*']
-      }
+      :default => {}
     }
   }
 
-  def initialize options
+  def run options
     @gemspec_string = ''
-    @gemspec = options.delete(:gemspec)
     @options = options
     @dependencies = {
       :runtime => {},
@@ -39,9 +50,13 @@ class New::GemTask < New::Task
 private
 
   def build_attributes
-    @gemspec[:name] = @options[:name]
+    @gemspec = @options[:task_options].delete(:gemspec)
+    @gemspec[:name] = @options[:task_options][:name] || @options[:name]
     @gemspec[:version] = @options[:version]
     @gemspec[:date] = Date.today.to_s
+    @gemspec[:summary] = @options[:task_options].delete(:summary)
+    @gemspec[:files] = @options[:task_options].delete(:files)
+    @gemspec[:authors] = @options[:task_options].delete(:authors)
   end
 
   # Build glob-based attributes into file lists
@@ -100,22 +115,22 @@ private
   #
   def validate_gemspec
     unless @gemspec[:name]
-      S.ay 'Value for `name` is missing. Make sure to set `name` in your project\'s Newfile', :error
+      S.ay "Value for `name` is missing. Make sure to set `name` in your project's Newfile", :fail
       exit
     end
 
     unless @gemspec[:version]
-      S.ay 'Value for `version` is missing. This should be automatically set. Please report this issue to Github issues: https://github.com/brewster1134/new/issues', :error
+      S.ay 'Value for `version` is missing. This should be automatically set. Please report this issue to Github issues: https://github.com/brewster1134/new/issues', :fail
       exit
     end
 
     unless @gemspec[:summary]
-      S.ay 'Value for `summary` is missing. Make sure to set `tasks > gem > gemspec > summary` in your project\'s Newfile', :error
+      S.ay "Value for `summary` is missing. Make sure to set `tasks > gem > summary` in your project's Newfile", :fail
       exit
     end
 
     unless @gemspec[:author] || @gemspec[:authors]
-      S.ay 'Value for `author`/`authors` is missing. Make sure to set `tasks > gem > gemspec > author/authors` in your project\'s Newfile', :error
+      S.ay "Value for `author`/`authors` is missing. Make sure to set `tasks > gem > authors` in your project's Newfile'", :fail
       exit
     end
   end
@@ -136,8 +151,8 @@ private
   # push gem to rubygems
   #
   def push_gem
-    `gem build .gemspec`
-    `gem push #{@gemspec[:name]}-#{@gemspec[:version]}.gem`
+    system 'gem build .gemspec'
+    system "gem push #{@gemspec[:name]}-#{@gemspec[:version]}.gem"
   end
 
   def cleanup
