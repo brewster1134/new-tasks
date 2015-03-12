@@ -6,7 +6,7 @@ describe New::GemTask do
     allow_any_instance_of(New::GemTask).to receive(:push_gem)
     allow_any_instance_of(New::GemTask).to receive(:cleanup)
 
-    @pwd = FileUtils.pwd
+    @pwd = Dir.pwd
     FileUtils.chdir root('tmp')
 
     @gem = New::GemTask.new('gem', @pwd)

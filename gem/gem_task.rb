@@ -4,24 +4,24 @@ class New::GemTask < New::Task
   @@description = 'Publish gem to rubygems'
   @@options = {
     :name => {
-      :description => 'The gem name'
+      :description => 'A unique gem name to publish to RubyGems'
     },
     :summary => {
       :description => "A short summary of this gem's description",
       :required => true
     },
     :files => {
-      :description => 'Files included in this gem',
+      :description => 'Unix globs of files to include in the gem',
       :type => Array,
       :default => ['**/*','**/.*']
     },
     :authors => {
-      :description => 'List of authors',
+      :description => 'Author names',
       :type => Array,
       :required => true
     },
     :gemspec => {
-      :description => 'An object with any additional supported gemspec attributes',
+      :description => 'An object with any additional supported gemspec attributes (guides.rubygems.org/specification-reference)',
       :type => Hash,
       :default => {}
     }
@@ -63,7 +63,7 @@ private
   #
   def build_glob_attributes
     # set array of gemspec attributes that expect glob patterns
-    glob_attributes = [:files, :test_files, :extra_rdoc_files]
+    glob_attributes = [:files, :extra_rdoc_files]
 
     # if any glob attributes are defined, convert the globs to a file list
     (glob_attributes & @gemspec.keys).each do |glob_option|
