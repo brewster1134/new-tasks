@@ -27,6 +27,14 @@ class New::GemTask < New::Task
     }
   }
 
+  def verify
+    # make sure rubygems is installed
+    `gem -v`
+    unless $?.success?
+      raise S.ay('RubyGems is not installed. Make sure you can run `gem -v`', :fail)
+    end
+  end
+
   def run options
     @gemspec_string = ''
     @options = options
