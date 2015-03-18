@@ -19,7 +19,7 @@ class New::CapistranoTask < New::Task
     end
   end
 
-  def run options
-    system "bundle exec cap #{options[:task_options][:environment]} deploy"
+  def run
+    system "bundle exec cap #{@options[:task_options][:environment]} deploy"
   end
 end

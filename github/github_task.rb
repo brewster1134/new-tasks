@@ -23,12 +23,11 @@ class New::GithubTask < New::Task
     elsif !git_status.include? 'Your branch is up-to-date with'
       raise S.ay('Git: You must be up to date with your remote branch. Run `git pull`', :fail)
     elsif !git_status.include? 'nothing to commit, working directory clean'
-      raise S.ay('Stash or commit your changes. Working directory must be clean', :fail)
+      raise S.ay('Git: Stash or commit your changes. Working directory must be clean', :fail)
     end
   end
 
-  def run options
-    @options = options
+  def run
     commit_changes
   end
 
@@ -52,7 +51,7 @@ private
   end
 
   def commit_message
-    messages_string = @options[:version].to_s
+    messages_string = @options[:version].dup.to_s
     messages_string << "\n"
 
     # add bulleted list of changelog entries

@@ -35,9 +35,8 @@ class New::GemTask < New::Task
     end
   end
 
-  def run options
+  def run
     @gemspec_string = ''
-    @options = options
     @dependencies = {
       :runtime => {},
       :development => {}
@@ -159,8 +158,8 @@ private
   # push gem to rubygems
   #
   def push_gem
-    system 'gem build .gemspec'
-    system "gem push #{@gemspec[:name]}-#{@gemspec[:version]}.gem"
+    system "gem build .gemspec #{SILENCE}"
+    system "gem push #{@gemspec[:name]}-#{@gemspec[:version]}.gem #{SILENCE}"
   end
 
   def cleanup

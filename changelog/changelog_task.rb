@@ -6,13 +6,13 @@ class New::ChangelogTask < New::Task
     }
   }
 
-  def run options
-    changelog_file = File.join(Dir.pwd, options[:task_options][:file_name])
+  def run
+    changelog_file = File.join(Dir.pwd, @options[:task_options][:file_name])
     changelog_string = File.read(changelog_file) rescue ''
 
     # build new string
-    new_changelog_string = "###### #{options[:version]}\n"
-    options[:changelog].each do |log|
+    new_changelog_string = "###### #{@options[:version]}\n"
+    @options[:changelog].each do |log|
       new_changelog_string << "* #{log}\n"
     end
 

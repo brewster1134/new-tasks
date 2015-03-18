@@ -23,7 +23,7 @@ class New::EngineYardTask < New::Task
     end
   end
 
-  def run options
-    system "ey deploy --account='#{options[:task_options][:account]}' --app='#{options[:task_options][:app]}' --environment='#{options[:task_options][:environment]}'"
+  def run
+    system "ey deploy --account='#{@options[:task_options][:account]}' --app='#{@options[:task_options][:app]}' --environment='#{@options[:task_options][:environment]}'"
   end
 end
