@@ -9,7 +9,7 @@ describe New::ChangelogTask do
     FileUtils.chdir root('tmp')
 
     # run twice to create 2 versions in the changelog
-    @gem.run({
+    @gem.options = {
       :name => 'Name',
       :version => '1.2.3',
       :task_options => {
@@ -19,9 +19,10 @@ describe New::ChangelogTask do
         'Foo 1',
         'Bar 1'
       ]
-    })
+    }
+    @gem.run
 
-    @gem.run({
+    @gem.options = {
       :name => 'Name',
       :version => '1.2.4',
       :task_options => {
@@ -31,7 +32,8 @@ describe New::ChangelogTask do
         'Foo 2',
         'Bar 2'
       ]
-    })
+    }
+    @gem.run
   end
 
   after do

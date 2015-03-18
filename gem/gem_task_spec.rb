@@ -10,16 +10,19 @@ describe New::GemTask do
     FileUtils.chdir root('tmp')
 
     @gem = New::GemTask.new('gem', @pwd)
-    @gem.run({
+    @gem.options = {
       :name => 'Name',
       :version => '1.2.3',
       :task_options => {
         :summary => 'Summary',
         :files => ['*'],
         :authors => ['Author'],
-        :gemspec => {}
+        :gemspec => {
+          :licenses => ['MIT']
+        }
       }
-    })
+    }
+    @gem.run
   end
 
   after do
@@ -32,6 +35,10 @@ describe New::GemTask do
   it 'should build glob attributes' do
     expect(@gem.instance_var(:gemspec)[:files]).to be_an Array
     expect(@gem.instance_var(:gemspec)[:files]).to_not including('spec')
+  end
+
+  it 'should build gemspec attributes' do
+    expect(@gem.instance_var(:gemspec)[:licenses]).to include('MIT')
   end
 
   it 'should write a gemspec string' do

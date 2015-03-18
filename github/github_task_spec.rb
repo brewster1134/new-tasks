@@ -6,7 +6,7 @@ describe New::GithubTask do
     @gem = New::GithubTask.new 'github', Dir.pwd
     allow(@gem).to receive(:commit_changes)
 
-    @gem.run({
+    @gem.options = {
       :name => 'Name',
       :version => '1.2.3',
       :changelog => [
@@ -19,7 +19,8 @@ describe New::GithubTask do
           :branch => 'master'
         }
       }
-    })
+    }
+    @gem.run
   end
 
   describe '#commit_message' do
