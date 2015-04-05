@@ -2,7 +2,8 @@ class New::ChangelogTask < New::Task
   @@description = 'Maintain a markdown formatted CHANGELOG in the root of your project'
   @@options = {
     :file_name => {
-      :default => 'CHANGELOG'
+      :description => 'Name of your changelog file',
+      :default => 'CHANGELOG.md'
     }
   }
 

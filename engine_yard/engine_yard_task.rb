@@ -16,14 +16,12 @@ class New::EngineYardTask < New::Task
   }
 
   def verify
-    # make sure engine yard tool is installed
-    `ey -v`
-    unless $?.success?
-      raise S.ay('Engine Yard gem is not installed. Run `gem install engineyard`', :fail)
+    unless run_command 'ey -v'
+      raise S.ay 'Engine Yard gem is not installed. Run `gem install engineyard`', :error
     end
   end
 
   def run
-    system "ey deploy --account='#{@options[:task_options][:account]}' --app='#{@options[:task_options][:app]}' --environment='#{@options[:task_options][:environment]}'"
+    run_command "ey deploy --account='#{@options[:task_options][:account]}' --app='#{@options[:task_options][:app]}' --environment='#{@options[:task_options][:environment]}'"
   end
 end

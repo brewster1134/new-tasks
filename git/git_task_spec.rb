@@ -1,10 +1,9 @@
 require 'new'
-require_relative 'github_task'
+require_relative 'git_task'
 
-describe New::GithubTask do
+describe New::GitTask do
   before do
-    @gem = New::GithubTask.new 'github', Dir.pwd
-    allow(@gem).to receive(:commit_changes)
+    @gem = New::GitTask.new 'github', Dir.pwd
 
     @gem.options = {
       :name => 'Name',
@@ -14,13 +13,18 @@ describe New::GithubTask do
         'bar'
       ],
       :task_options => {
-        :github => {
-          :remote => 'origin',
-          :branch => 'master'
-        }
+        :remotes => [
+          {
+            :repo => 'origin',
+            :branch => 'master'
+          },
+          {
+            :repo => 'origin2',
+            :branch => 'master2'
+          },
+        ]
       }
     }
-    @gem.run
   end
 
   describe '#commit_message' do

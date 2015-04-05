@@ -28,10 +28,8 @@ class New::GemTask < New::Task
   }
 
   def verify
-    # make sure rubygems is installed
-    `gem -v`
-    unless $?.success?
-      raise S.ay('RubyGems is not installed. Make sure you can run `gem -v`', :fail)
+    unless run_command 'gem -v'
+      raise S.ay 'RubyGems is not installed. Make sure you can run `gem -v`', :error
     end
   end
 
@@ -103,6 +101,20 @@ private
     end
   end
 
+  # validate required attributes to build a gem are set
+  #
+  def validate_gemspec
+    unless @gemspec[:summary]
+      S.ay "Value for `summary` is missing. Make sure to set `tasks > gem > summary` in your project's Newfile", :error
+      exit
+    end
+
+    unless @gemspec[:author] || @gemspec[:authors]
+      S.ay "Value for `author`/`authors` is missing. Make sure to set `tasks > gem > authors` in your project's Newfile'", :error
+      exit
+    end
+  end
+
   def build_gemspec_string
     @gemspec.each do |key, val|
       val = "'#{val}'" if val.is_a? String
@@ -115,30 +127,6 @@ private
 
     @dependencies[:development].each do |key, val|
       @gemspec_string << "  s.add_development_dependency '#{key}', '#{val}'\n"
-    end
-  end
-
-  # validate required attributes to build a gem are set
-  #
-  def validate_gemspec
-    unless @gemspec[:name]
-      S.ay "Value for `name` is missing. Make sure to set `name` in your project's Newfile", :fail
-      exit
-    end
-
-    unless @gemspec[:version]
-      S.ay 'Value for `version` is missing. This should be automatically set. Please report this issue to Github issues: https://github.com/brewster1134/new/issues', :fail
-      exit
-    end
-
-    unless @gemspec[:summary]
-      S.ay "Value for `summary` is missing. Make sure to set `tasks > gem > summary` in your project's Newfile", :fail
-      exit
-    end
-
-    unless @gemspec[:author] || @gemspec[:authors]
-      S.ay "Value for `author`/`authors` is missing. Make sure to set `tasks > gem > authors` in your project's Newfile'", :fail
-      exit
     end
   end
 
@@ -158,8 +146,8 @@ private
   # push gem to rubygems
   #
   def push_gem
-    system "gem build .gemspec #{SILENCE}"
-    system "gem push #{@gemspec[:name]}-#{@gemspec[:version]}.gem #{SILENCE}"
+    run_command 'gem build .gemspec'
+    run_command "gem push #{@gemspec[:name]}-#{@gemspec[:version]}.gem"
   end
 
   def cleanup

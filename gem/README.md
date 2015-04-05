@@ -1,36 +1,24 @@
-# GEM TASK
+# Gem New Task
 
-###### gemspec attributes
+### Requirements
+* [ruby gems](https://github.com/rubygems/rubygems)
 
-You can add any of the supported gemspec attributes to your project's `.new` configuration file.
+### Options
+* __`summary`__: A short summary of this gem's description
+* __`authors`__: Author names
+* `name`: A unique gem name to publish to RubyGems
+* `files`: Unix globs of files to include in the gem
+* `gemspec`: An object with any additional supported gemspec attributes
 
 ```yaml
 tasks:
   gem:
-    author: Brewster
-    summary: My gem summary
+    summary: My gem description
+    name: Foo
+    authors:
+      - John Smith
     files:
-      - 'lib/**/*.rb'
-    test_files:
-      - 'spec/**/*.rb'
+      - '**/*'
+    gemspec:
+      license: MIT
 ```
-
-A full list can be found here http://guides.rubygems.org/specification-reference
-
-The following attributes are required
-
-* author
-* summary
-* files
-
-The following attributes expect arrays of unix glob patterns
-
-* files
-* test_files
-* extra_rdoc_files
-
-The following attributes are automatically set.
-
-* name
-* version
-* date
