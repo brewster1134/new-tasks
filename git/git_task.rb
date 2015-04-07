@@ -38,10 +38,7 @@ class New::GitTask < New::Task
   end
 
   def run
-    S.ay 'Preparing local git repo...', :preset => :header, :indent => 2
     git_local
-
-    S.ay 'Preparing remote git repos...', :preset => :header, :indent => 2
     git_remote
   end
 
@@ -50,6 +47,8 @@ private
   # commits any changes to the repo made from other tasks
   #
   def git_local
+    S.ay 'Preparing local git repo:', :highlight_key
+
     # add all changes from other tasks
     run_command 'git add -A'
 
@@ -58,17 +57,21 @@ private
 
     # create a new tag for the version
     run_command "git tag #{@options[:version]}"
+
+    S.ay 'OK', :highlight_value
   end
 
   def git_remote
     @options[:task_options][:remotes].each do |remote|
-      S.ay "Pushing to `#{remote[:repo].green}/#{remote[:branch].green}`...", :indent => 4
+      S.ay "Pushing to `#{remote[:repo].green}/#{remote[:branch].green}`:", :highlight_key
 
       # push tag to remote
       run_command "git push #{remote[:repo]} #{@options[:version]}"
 
       # push to specified branch
       run_command "git push #{remote[:repo]} #{remote[:branch]}"
+
+      S.ay 'OK', :highlight_value
     end
   end
 
